@@ -1,21 +1,67 @@
 // Module
 const gameBoard = (function() {
-    const board = ['', '', '', '', '', '', '', '', '']; 
-    let cells = [...document.querySelectorAll('.cell')]; 
+    let cells = [...document.querySelectorAll('.cell')];
+    return {
+        cells
+    }
+})(); 
 
-    const addMarker = function() {
-        // check is blank
-        if (this.innerText == '') {
-            let marker = game.currentMarker(); 
-            this.innerText = marker;
-            if (checkWinner(marker)) {
-                declareWinner(marker); 
-                resetGrid(); 
-            } 
-        }
+
+// factory function for repeating objects
+
+const people = function(name, marker) {
+    return  {name, marker}
+}
+
+
+const playerController = (function() {
+
+    const playerList =[]; 
+    const setPlayers = function(player1, player2) {
+        let person1 = people(player1, 'X'); 
+        let person2 = people(player2, 'O'); 
+        
+        playerList[0] = person1; 
+        playerList[1] = person2; 
+        return playerList; 
+    }
+    return {
+        playerList, 
+        setPlayers
     }
 
-    const checkWinner = function(marker) { 
+})(); 
+
+const displayController = (function() {
+    let currentPlayer = 0;  
+    const startBtn = document.getElementById('btn'); 
+    startBtn.addEventListener('click', startGame); 
+    gameBoard.cells.forEach(cell => {
+        cell.addEventListener('click', updateGrid)
+    })
+
+    function updateGrid() {
+
+        if (this.innerText !== '') {
+            return false;
+        }
+        this.innerText = playerController.playerList[currentPlayer].marker; 
+        checkWinner(); 
+        // Update to next player
+        currentPlayer = (currentPlayer + 1) % 2; 
+    }
+
+
+    
+    function startGame() {
+        gameBoard.cells.forEach(cell => cell.innerText = ''); 
+        currentPlayer = 0; 
+        const player1Name = document.getElementById('player1').value || 'player1'
+        const player2Name = document.getElementById('player2').value || 'player2'
+        playerController.setPlayers(player1Name, player2Name)
+    }
+
+    function checkWinner() {
         let winningArr = [[0,1,2], 
                          [3,4,5], 
                          [6,7,8], 
@@ -27,84 +73,24 @@ const gameBoard = (function() {
                         ]
 
         for (let i = 0; i < winningArr.length; i++) {
-            let check1 = winningArr[i][0]; 
-            let check2 = winningArr[i][1]; 
-            let check3 = winningArr[i][2]; 
-            if (cells[check1].innerText==marker 
-                    && cells[check2].innerText ==marker 
-                    && cells[check3].innerText == marker) {
-                return true; 
+            let check1 = winningArr[i][0];
+            let check2 = winningArr[i][1];
+            let check3 = winningArr[i][2];
+            let marker = playerController.playerList[currentPlayer].marker; 
+            if (gameBoard.cells[check1].innerText == marker && gameBoard.cells[check2].innerText == marker && gameBoard.cells[check3].innerText == marker) {
+                return alert('Winner winner, chicken dinner!')
             }
         }
-        return false;
-    }
-
-    const declareWinner = function(marker) {
-        let currentPerson = [game.person1,game.person2].filter(person => person.marker == marker);
-        return alert(`${currentPerson[0].name} wins!`) 
-    }
-
-    const resetGrid = function() {
-
-        game.resetMarker(); 
-        cells.forEach((cell,index) => {
-            cell.innerText = ''; 
-        })
+        return false; 
     }
 
 
-
-    cells.forEach((cell,index) => {
-        cell.addEventListener('click', addMarker)
-    })
-    
+    //Allows two players to start automatically
+    startGame(); 
+ 
 
     return {
-        addMarker
-    }
-})(); 
-
-
-// factory function for repeating objects
-
-const people = function(name, marker) {
-    return  {name, marker}
-}
-
-const game = (function() {
-
-    const btn = document.getElementById('btn'); 
-    
-    const setPeople = function() {
-        const player1Name = document.getElementById('player1').value || 'player1'; 
-        const player2Name = document.getElementById('player2').value || 'player2'; 
         
-        const person1 = people(player1Name, 'X'); 
-        const person2 = people(player2Name, 'O');
-        
-        return  {person1, person2} 
-    }
-    // Set people
-    
-    btn.addEventListener('click', setPeople);
-
-    // add marker
-
-    let marker = person1.marker
-    let currentMarker = () => {
-        marker =  marker == person1.marker ? person2.marker : person1.marker; 
-        return marker == person1.marker ? person2.marker : person1.marker; 
-    }
-
-    const resetMarker = function() {
-        marker = person1.marker; 
-    }
-
-    return {
-        currentMarker,
-        resetMarker,  
-        person1, 
-        person2
     }
 
 })(); 
