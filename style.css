@@ -1,0 +1,30 @@
+
+
+
+.grid {
+    width: 80vw; 
+    height: 50vh; 
+    margin: 0 auto; 
+    display: grid; 
+    grid-template-columns: repeat(3, 1fr);
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.cell {
+    height: 100%; 
+    width: 100%; 
+    border-right: 1px solid black; 
+    border-bottom: 1px solid black; 
+    display: grid;
+    place-items: center;
+}
+
+.cell:nth-child(3n) {
+    border-right: 0; 
+}
+
+.cell:nth-last-child(-n+3) {
+    border-bottom: 0;
+}
