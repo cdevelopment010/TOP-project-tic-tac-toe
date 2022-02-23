@@ -34,11 +34,16 @@ const playerController = (function() {
 
 const displayController = (function() {
     let currentPlayer = 0;  
-    const startBtn = document.getElementById('btn'); 
+    const startBtn = document.getElementById('btn');
+    const restartBtn = document.getElementById('restart-btn'); 
+    const playerStart = document.getElementById('player-start'); 
+    const game = document.getElementById('game'); 
+    
     startBtn.addEventListener('click', startGame); 
     gameBoard.cells.forEach(cell => {
         cell.addEventListener('click', updateGrid)
     })
+    restartBtn.addEventListener('click', updateScreen); 
 
     function updateGrid() {
 
@@ -46,9 +51,13 @@ const displayController = (function() {
             return false;
         }
         this.innerText = playerController.playerList[currentPlayer].marker; 
-        checkWinner(); 
-        // Update to next player
-        currentPlayer = (currentPlayer + 1) % 2; 
+
+        // the alert was showing before the inner text updated
+        setTimeout(() => {
+            checkWinner(); 
+            // Update to next player
+            currentPlayer = (currentPlayer + 1) % 2;
+        }, 50) 
     }
 
 
@@ -58,7 +67,10 @@ const displayController = (function() {
         currentPlayer = 0; 
         const player1Name = document.getElementById('player1').value || 'player1'
         const player2Name = document.getElementById('player2').value || 'player2'
-        playerController.setPlayers(player1Name, player2Name)
+        playerController.setPlayers(player1Name, player2Name); 
+        updateScreen(); 
+        document.getElementById('player1').value = ''; 
+        document.getElementById('player2').value = ''; 
     }
 
     function checkWinner() {
@@ -70,7 +82,14 @@ const displayController = (function() {
                          [2,5,8], 
                          [0,4,8],
                          [2,4,6]
-                        ]
+                        ]; 
+
+        let continueCheck = gameBoard.cells.some(cell => cell.innerText == ''); 
+        if (!continueCheck) {
+            alert(`It is a draw!`); 
+            updateScreen(); 
+            return true;
+        } 
 
         for (let i = 0; i < winningArr.length; i++) {
             let check1 = winningArr[i][0];
@@ -78,16 +97,19 @@ const displayController = (function() {
             let check3 = winningArr[i][2];
             let marker = playerController.playerList[currentPlayer].marker; 
             if (gameBoard.cells[check1].innerText == marker && gameBoard.cells[check2].innerText == marker && gameBoard.cells[check3].innerText == marker) {
-                return alert('Winner winner, chicken dinner!')
+                alert(`Winner winner, chicken dinner! \n${playerController.playerList[currentPlayer].name} wins`); 
+                updateScreen(); 
+                return true; 
             }
         }
         return false; 
     }
 
 
-    //Allows two players to start automatically
-    startGame(); 
- 
+    function updateScreen() {
+        game.classList.toggle('hidden');
+        playerStart.classList.toggle('hidden');
+    }
 
     return {
         
