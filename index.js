@@ -15,7 +15,7 @@ const gameBoard = ((function() {
     })
 
     function checkWinner(arrToCheck) {
-        let currentPlayer = gameController.getCurrentPlayer(); 
+        let markers = ['X', 'O']; 
         let winningArr = [[0,1,2], 
                          [3,4,5], 
                          [6,7,8], 
@@ -26,23 +26,31 @@ const gameBoard = ((function() {
                          [2,4,6]
                         ]; 
 
-        let continueCheck = arrToCheck.some(cell => cell.innerText == ''); 
-        if (!continueCheck) {
-            console.log(`It is a draw!`); 
-            gameController.gameOver(); 
-            return true;
-        } 
+        
 
         for (let i = 0; i < winningArr.length; i++) {
             let check1 = winningArr[i][0];
             let check2 = winningArr[i][1];
             let check3 = winningArr[i][2];
-            let marker = playerController.playerList[currentPlayer].marker; 
-            if (arrToCheck[check1].innerText == marker && arrToCheck[check2].innerText == marker && arrToCheck[check3].innerText == marker) {
-                console.log(`Winner winner, chicken dinner! \n${playerController.playerList[currentPlayer].name} wins`); 
-                gameController.gameOver(playerController.playerList[currentPlayer].name);
-                return true;
-            }
+            
+
+            for (let j = 0; j < markers.length ; j++) {
+                if (arrToCheck[check1].innerText == markers[j] && arrToCheck[check2].innerText == markers[j] && arrToCheck[check3].innerText == markers[j]) {
+                    console.log(`Check1`,check1,arrToCheck[check1].innerText)
+                    console.log(`Check2`,check2,arrToCheck[check2].innerText)
+                    console.log(`Check3`,check3,arrToCheck[check3].innerText)
+                    let winner = gameController.getCurrentPlayerByMarker(markers[j]); 
+                    console.log(`Winner winner, chicken dinner! \n${winner} wins`); 
+                    gameController.gameOver(winner);
+                    return true;
+                }
+            }         
+        }
+        let continueCheck = arrToCheck.some(cell => cell.innerText == ''); 
+        if (!continueCheck) {
+            console.log(`It is a draw!`); 
+            gameController.gameOver(); 
+            return true;
         }
         return false; 
     }
@@ -59,15 +67,16 @@ const gameBoard = ((function() {
         }
 
         // If player2 is a bot
-        if (playerController.playerList[1].name =='player2') {
-            this.innerText = playerController.playerList[player].marker; 
-            botController.recursiveFindBlank(cells,true); 
-
-        } else {
+        if (playerController.playerList[1].name !='player2') {
             this.innerText = playerController.playerList[player].marker; 
             gameController.updatePlayer();
+        } else {
+            this.innerText = playerController.playerList[player].marker; 
+            checkWinner(cells);
+            botController.recursiveFindBlank(cells, true)
         }
 
+        console.log("cells", cells)
 
         // the alert was showing before the inner text updated
         setTimeout(() => {
@@ -135,6 +144,9 @@ const gameController = (function() {
     function getCurrentPlayer() {
         return currentPlayer;
     }
+    function getCurrentPlayerByMarker(marker) {
+        return playerController.playerList[0].marker == marker ? playerController.playerList[0].name : playerController.playerList[1].name;
+    }
 
     function updateScreen() {
         game.classList.toggle('hidden');
@@ -142,7 +154,7 @@ const gameController = (function() {
     }
 
     function gameOver(winner) {
-        gameOverScreen.querySelector('h2').innerText = `Winner: ${winner}`; 
+        gameOverScreen.querySelector('h2').innerText = winner == undefined ? `It is a draw!` : `Winner: ${winner}`; 
         gameOverScreen.classList.remove('hidden')
         game.classList.add('hidden');
         playerStart.classList.add('hidden');
@@ -166,7 +178,8 @@ const gameController = (function() {
     return {
         updatePlayer,
         getCurrentPlayer, 
-        gameOver
+        gameOver, 
+        getCurrentPlayerByMarker
     }
 
 })(); 
