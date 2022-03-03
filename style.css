@@ -30,7 +30,7 @@ header img {
 
 .grid { 
     width: 100%; 
-    height: max(50vh,200px);
+    height: max(40vh,200px);
     margin: 0 auto; 
     display: grid; 
     grid-template-columns: repeat(3, 1fr);
@@ -51,6 +51,17 @@ header img {
     border-radius: 5px; 
     transition: 0.2s;
     cursor: pointer;
+}
+.cell-mini {
+    height: 15px; 
+    width: 15px; 
+    background-color: #dedeee;
+    border-radius: 5px; 
+    transition: 0.2s;
+    display: grid;
+    background-color: #dedeee;
+    border-radius: 2px; 
+    transition: 0.2s;
 }
 
 .cell:hover {
@@ -79,9 +90,13 @@ header img {
     border-radius: 10px;
     box-shadow: 0 4px 4px 0 rgba(0,0,0,0.25);
 }
-
+.player-start label {
+    display: flex; 
+    align-items: center;
+    gap: 5px; 
+}
 .game {
-    width: max(50vh, 200px); 
+    width: max(40vh, 200px); 
     display: grid; 
     gap: 20px; 
 }
@@ -104,4 +119,11 @@ button:hover {
 
 .hidden {
     display: none; 
+}
+
+.player0 {
+    background-color: lightgreen;
+}
+.player1 {
+    background-color: lightcoral;
 }

@@ -19,13 +19,14 @@
 
 
         <section id="player-start" class="player-start">
+            <p>Leave player 2 blank to test your skills against a bot! </p>
             <label for="player1">
-                Player1 (X): 
-                <input type="text" id="player1">
+                <span class="cell-mini player0"></span> Player1: 
+                <input type="text" id="player1" placeholder="player1">
             </label>
             <label for="player2">
-                Player2 (O): 
-                <input type="text" id="player2">
+                <span class="cell-mini player1"></span> Player2: 
+                <input type="text" id="player2" placeholder="player2">
             </label>
 
             <button id="btn">Start!</button>
@@ -33,17 +34,18 @@
         </section>
 
         <section class="game hidden" id="game">
+            <div id="turn"></div>
             <button id="restart-btn">Restart</button>
             <div class="grid">
-                <div class="cell"></div>
-                <div class="cell"></div>
-                <div class="cell"></div>
-                <div class="cell"></div>
-                <div class="cell"></div>
-                <div class="cell"></div>
-                <div class="cell"></div>
-                <div class="cell"></div>
-                <div class="cell"></div>
+                <div class="cell" id="0"></div>
+                <div class="cell" id="1"></div>
+                <div class="cell" id="2"></div>
+                <div class="cell" id="3"></div>
+                <div class="cell" id="4"></div>
+                <div class="cell" id="5"></div>
+                <div class="cell" id="6"></div>
+                <div class="cell" id="7"></div>
+                <div class="cell" id="8"></div>
             </div>
         </section>
 
@@ -53,6 +55,10 @@
             <button id="new-players">New Players?</button>
         </section>
     </main>
+
+    <footer>
+        
+    </footer>
 
 
     <script src="./index.js"></script>

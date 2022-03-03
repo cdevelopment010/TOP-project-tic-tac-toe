@@ -8,14 +8,17 @@ const people = function(name, marker) {
 
 const gameBoard = ((function() {
 
+    
     let cells = [...document.querySelectorAll('.cell')];
-
+    const board = []; 
+    for (let i = 0; i < 9; i++) {
+        board.push(''); 
+    }
     cells.forEach(cell=> {
         cell.addEventListener('click',updateGrid);
     })
 
-    function checkWinner(arrToCheck) {
-        let markers = ['X', 'O']; 
+    function checkWinner(arrToCheck, marker) {
         let winningArr = [[0,1,2], 
                          [3,4,5], 
                          [6,7,8], 
@@ -24,70 +27,104 @@ const gameBoard = ((function() {
                          [2,5,8], 
                          [0,4,8],
                          [2,4,6]
-                        ]; 
+                        ];
+    
+        for (let i = 0; i < winningArr.length; i++){
+            if (arrToCheck[winningArr[i][0]] != '' && (arrToCheck[winningArr[i][0]] == arrToCheck[winningArr[i][1]]
+                             && arrToCheck[winningArr[i][0]] == arrToCheck[winningArr[i][2]])) {
 
-        
+                if (arrToCheck[winningArr[i][0]] == marker) {
+                    return {
+                        gameover: true, 
+                        score: 1
+                    }; 
 
-        for (let i = 0; i < winningArr.length; i++) {
-            let check1 = winningArr[i][0];
-            let check2 = winningArr[i][1];
-            let check3 = winningArr[i][2];
-            
+                } else {
+                    return {
+                        gameover: true, 
+                        score: -1
 
-            for (let j = 0; j < markers.length ; j++) {
-                if (arrToCheck[check1].innerText == markers[j] && arrToCheck[check2].innerText == markers[j] && arrToCheck[check3].innerText == markers[j]) {
-                    console.log(`Check1`,check1,arrToCheck[check1].innerText)
-                    console.log(`Check2`,check2,arrToCheck[check2].innerText)
-                    console.log(`Check3`,check3,arrToCheck[check3].innerText)
-                    let winner = gameController.getCurrentPlayerByMarker(markers[j]); 
-                    console.log(`Winner winner, chicken dinner! \n${winner} wins`); 
-                    gameController.gameOver(winner);
-                    return true;
+                    }; 
                 }
-            }         
+            }
         }
-        let continueCheck = arrToCheck.some(cell => cell.innerText == ''); 
-        if (!continueCheck) {
-            console.log(`It is a draw!`); 
-            gameController.gameOver(); 
-            return true;
+
+        if (emptyCellCount() == 0) {
+            return {
+                gameover: true, 
+                score: 0
+            }; 
         }
-        return false; 
+        return {
+            gameover: false, 
+            // score: null
+            score: 0
+        }; 
     }
 
     function clearCells() {
-        cells.forEach(cell => cell.innerText = '');
+        cells.forEach(cell => {
+            cell.innerText = ''
+            cell.className = cell.className.replace(/player*/gi, '')
+        });
+        board.forEach((square, index) => {
+            board[index] = ''; 
+        }); 
     }
 
+    function emptyCellCount() {
+        return board.reduce((prev,next) => next == '' ? prev + 1 : prev, 0)
+    }
 
     function updateGrid() {
-        let player= gameController.getCurrentPlayer()        
-        if (this.innerText !== '' || checkWinner(cells)) {
+        let positionsRemaining = emptyCellCount() - 1;  
+        let player= gameController.getCurrentPlayer() ; 
+        let currentMarker = playerController.playerList[player].marker; 
+        let opponentMarker = ['X','O'].filter(symbol => symbol != currentMarker)[0];
+        let opponent = gameController.getCurrentPlayerByMarker(['X','O'].filter(symbol => symbol != currentMarker));
+        if (board[this.id] !== '' || checkWinner(board, currentMarker).gameover) {
             return false;
-        }
-
-        // If player2 is a bot
+        }       
+        
+        // If player2 is not a bot
         if (playerController.playerList[1].name !='player2') {
-            this.innerText = playerController.playerList[player].marker; 
+            board[this.id] = currentMarker; 
+            console.log(`player${player}`); 
+            this.classList.add(`player${player}`); 
             gameController.updatePlayer();
+            document.getElementById('turn').innerText  = `It is ${gameController.playerName()}'s turn`; 
         } else {
-            this.innerText = playerController.playerList[player].marker; 
-            checkWinner(cells);
-            botController.recursiveFindBlank(cells, true)
+            //if player 2 is a bot
+            board[this.id] = currentMarker; 
+            this.classList.add(`player${player}`); 
+            let move = botController.minimax(cells, positionsRemaining, true, opponentMarker).index; 
+            if (move != undefined) {
+                cells[move].classList.add(`player${player+1}`)
+                board[move] = opponentMarker;
+            } 
         }
-
-        console.log("cells", cells)
-
-        // the alert was showing before the inner text updated
+        
         setTimeout(() => {
-            checkWinner(cells); 
+            if(checkWinner(board, currentMarker).gameover) {
+                let winner; 
+                if (checkWinner(board, currentMarker).score === 0 ) {
+                    winner = 'draw'
+                } else if (checkWinner(board, currentMarker).score === 1) {
+                    winner = gameController.getCurrentPlayerByMarker(currentMarker); 
+                } else {
+                    winner = opponent
+                }
+                gameController.gameOver(winner)
+            } 
         }, 50) 
     }
 
     return {
         cells,
+        board,
         clearCells, 
-        checkWinner
+        checkWinner, 
+        emptyCellCount, 
     }
 }))(); 
 
@@ -135,10 +172,15 @@ const gameController = (function() {
         updateScreen(); 
         document.getElementById('player1').value = ''; 
         document.getElementById('player2').value = ''; 
+        document.getElementById('turn').innerText  = `It is ${playerName()}'s turn`; 
     }
 
     function updatePlayer() {
         currentPlayer = (currentPlayer + 1) % 2;
+    }
+
+    function playerName() {
+        return playerController.playerList[currentPlayer].name; 
     }
 
     function getCurrentPlayer() {
@@ -154,7 +196,7 @@ const gameController = (function() {
     }
 
     function gameOver(winner) {
-        gameOverScreen.querySelector('h2').innerText = winner == undefined ? `It is a draw!` : `Winner: ${winner}`; 
+        gameOverScreen.querySelector('h2').innerText = winner == 'draw' ? `It is a draw!` : `Winner: ${winner}`; 
         gameOverScreen.classList.remove('hidden')
         game.classList.add('hidden');
         playerStart.classList.add('hidden');
@@ -166,6 +208,7 @@ const gameController = (function() {
         gameOverScreen.classList.add('hidden') 
         currentPlayer = 0; 
         game.classList.toggle('hidden');
+        document.getElementById('turn').innerText  = `It is ${playerName()}'s turn`; 
     }
 
     function newGame() {
@@ -173,13 +216,15 @@ const gameController = (function() {
         playerStart.classList.toggle('hidden');
         gameBoard.clearCells();
         gameOverScreen.classList.add('hidden')
+        document.getElementById('turn').innerText  = `It is ${playerName()}'s turn`; 
     }
 
     return {
         updatePlayer,
         getCurrentPlayer, 
         gameOver, 
-        getCurrentPlayerByMarker
+        getCurrentPlayerByMarker, 
+        playerName
     }
 
 })(); 
@@ -187,88 +232,68 @@ const gameController = (function() {
 
 
 const botController = (function() {
-
-    let remainingCells = [];
-
-    let score = {
-        win: 1, 
-        loss: -1, 
-        draw: 0
-    }
-
-
+    function availableSquares(arr) {
+        let available = arr.map((space,index) => {
+            if (space == '')
+            return index; 
+        }).filter(space => space != undefined); 
     
-    //position = current position
-    //depth = how many moves ahead
-    //maximising player = boolean 
-    function minimax(position, depth, maximisingPlayer) {
-        console.log("depth", depth); 
-        updateRemainingCells(position); 
-        if (depth = 0) return;
-        
-        if (maximisingPlayer) {
-            let maxEval = -Infinity
-            
+        return available; 
+    }
 
-            for (let i = 0; i < remainingCells.length; i++) {
-                if (remainingCells[i] == '') {
-                    remainingCells[i] = 0; 
-                    console.log("minimax=true",remainingCells)
-                    gameBoard.checkWinner(remainingCells); 
-                    minimax(remainingCells, depth-1, false); 
+    function minimax(position, depth, maximise, marker) {
+        let bestScore, currentScore, bestMove; 
+        let opponentMarker = ['X', 'O'].filter(mark => mark != marker)[0]; 
+        let availableSpaces = availableSquares(gameBoard.board); 
+        let moves = []
+        let move; 
+        let checkWinner = gameBoard.checkWinner(gameBoard.board, marker);
+        if (checkWinner.gameover || depth == 0 ) {
+            let score = checkWinner.score >= 0 ? checkWinner.score - depth:  checkWinner.score - depth
+            return {index: availableSpaces[0], score} ; 
+        }
+        if (availableSpaces.length > 0 ) {
+            for (let i = 0; i < availableSpaces.length; i++) {
+                move = {}
+                move.index = availableSpaces[i]; 
+                
+                // console.log("tempboard:",  board); 
+                if (!maximise) {
+                    gameBoard.board[availableSpaces[i]] = opponentMarker;
+                    currentScore= minimax(position, depth - 1 , true, marker)
+                    move.score = currentScore.score; 
+                } else {
+                    gameBoard.board[availableSpaces[i]] = marker;
+                    currentScore = minimax(position, depth - 1 , false, marker)
+                    move.score = currentScore.score; 
+                }
+                gameBoard.board[availableSpaces[i]] = ''; 
+                moves.push(move)
+            }
+        }
+    
+        if (maximise) {
+            bestScore = Number.NEGATIVE_INFINITY; 
+            for (let i = 0; i < moves.length; i++) {
+                if (moves[i].score > bestScore) {
+                    bestScore = moves[i].score; 
+                    bestMove = i; 
                 }
             }
-            return maxEval
         } else {
-
-            let minEval = Infinity; 
-
-            for (let i = 0; i < remainingCells.length; i++) {
-                if (remainingCells[i] == '') {
-
-                    remainingCells[i] = 0; 
-                    if (!gameBoard.checkWinner(remainingCells)) {
-                        minimax(remainingCells, depth-1, true)
-                        minEval = Math.min(minEval,1) 
-                    }
+            bestScore = Number.POSITIVE_INFINITY; 
+            for (let j = 0; j < moves.length; j++) {
+                if (moves[j].score < bestScore) {
+                    bestScore = moves[j].score; 
+                    bestMove = j; 
                 }
             }
-
-            return  minEval
-        }
-    }
-
-    function updateRemainingCells(arr) {
-        remainingCells = arr.map(cell => cell.innerText == '' ? '' : 0); 
-        console.log("remaining cells",remainingCells); 
-        let continueCheck = remainingCells.some(cell => cell.innerText == ''); 
-        console.log("check empty", continueCheck); 
-    }
-
-
-    function recursiveFindBlank(arr, bot) {
-        let firstBlank = -1;
-        let tempArr = [...arr]; 
-        for (let i = 0; i<tempArr.length; i++) {
-            // console.log(arr[i]); 
-            if (tempArr[i].innerText =='') {
-                firstBlank = i; 
-                break;
-            }
         }
 
-        
-        if (!bot || firstBlank == -1) {
-            return;
-        }
-
-        tempArr[firstBlank].innerText = 'O'; 
-        return recursiveFindBlank(tempArr, false)
+        return moves[bestMove]; 
     }
-
     return {
-        minimax, 
-        recursiveFindBlank
+        minimax
     }
 
 })()
